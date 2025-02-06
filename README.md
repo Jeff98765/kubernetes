@@ -1,7 +1,3 @@
 # kubernetes
 
-how does this work
-
-eeee
-
-dk
+kubernetes project readme file
