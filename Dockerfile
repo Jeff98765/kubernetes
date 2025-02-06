@@ -15,4 +15,4 @@ COPY . .
 RUN chmod +x run.sh
 
 # Set the default command to run the pipeline using the run.sh script
-CMD ["./run.sh"]
+CMD ["./run.sh"]
