@@ -12,4 +12,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Run the dataprep_c1.py script when the container starts
-CMD ["python", "dataprep_c1.py"]
+CMD ["python", "model_c2.py"]

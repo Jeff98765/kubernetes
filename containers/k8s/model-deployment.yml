@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: model
+  template:
+    metadata:
+      labels:
+        app: model
+    spec:
+      containers:
+      - name: model-container
+        image: kubelete/model_image:v1
+        volumeMounts:
+        - name: processed-data-volume
+          mountPath: /app/data/02_processed
+        - name: saved-model-volume
+          mountPath: /app/saved_model
+      volumes:
+      - name: processed-data-volume
+        persistentVolumeClaim:
+          claimName: output-pvc
+      - name: saved-model-volume
+        persistentVolumeClaim:
+          claimName: model-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: model-service
+spec:
+  selector:
+    app: model
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5000

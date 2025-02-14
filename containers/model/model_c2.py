@@ -126,13 +126,15 @@ def train_and_evaluate_model(model, X_train, y_train, X_test, y_test):
     print(classification_report(y_test, y_pred))
     return metrics
 
-def save_model(model):
-    """Saves the trained model using joblib."""
-    model_save_path = 'saved_model/random_forest_model.pkl'
-    
+def save_model(model, model_name):
+    """Saves the trained model using joblib with its name."""
+    model_filename = f"{model_name.lower().replace(' ', '_')}_model.pkl"
+    model_save_path = os.path.join('saved_model', model_filename)
+
     os.makedirs(os.path.dirname(model_save_path), exist_ok=True)
     joblib.dump(model, model_save_path)
     print(f"Model saved to {model_save_path}")
+
 
 if __name__ == '__main__':
     # Load the processed training dataset
@@ -152,4 +154,4 @@ if __name__ == '__main__':
     final_metrics = train_and_evaluate_model(best_model_tuned, X_train, y_train, X_test, y_test)
 
     # Save the best model
-    save_model(best_model_tuned)
+    save_model(best_model_tuned, best_model_name)

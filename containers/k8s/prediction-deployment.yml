@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prediction-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: prediction
+  template:
+    metadata:
+      labels:
+        app: prediction
+    spec:
+      containers:
+      - name: prediction-container
+        image: kubelete/prediction_image:v1
+        volumeMounts:
+        - name: processed-data-volume
+          mountPath: /app/data/02_processed
+        - name: saved-model-volume
+          mountPath: /app/saved_model
+        - name: predicted-data-volume
+          mountPath: /app/data/03_predicted
+      volumes:
+      - name: processed-data-volume
+        persistentVolumeClaim:
+          claimName: output-pvc
+      - name: saved-model-volume
+        persistentVolumeClaim:
+          claimName: model-pvc
+      - name: predicted-data-volume
+        persistentVolumeClaim:
+          claimName: predictions-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prediction-service
+spec:
+  selector:
+    app: prediction
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5000

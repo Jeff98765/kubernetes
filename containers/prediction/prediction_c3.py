@@ -37,7 +37,7 @@ if __name__ == '__main__':
     test_data_path = 'data/02_processed/test_processed.csv'
     test_data = pd.read_csv(test_data_path)
 
-    model_path = 'saved_models/random_forest_model.pkl'
+    model_path = 'saved_model/random_forest_model.pkl'
     output_filename = 'predictions.csv'
 
     make_predictions_and_save_to_csv(test_data, model_path, output_filename)    

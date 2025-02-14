@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dataprep-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: dataprep
+  template:
+    metadata:
+      labels:
+        app: dataprep
+    spec:
+      containers:
+      - name: dataprep-container
+        image: kubelete/dataprep_image:v1
+        volumeMounts:
+        - name: raw-data-volume
+          mountPath: /app/data/01_raw
+        - name: processed-data-volume
+          mountPath: /app/data/02_processed
+      volumes:
+      - name: raw-data-volume
+        configMap:
+          name: raw-dataset-config
+      - name: processed-data-volume
+        persistentVolumeClaim:
+          claimName: output-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dataprep-service
+spec:
+  selector:
+    app: dataprep
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5000
