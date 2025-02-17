@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ml-deployment
+spec:
+  replicas: 3 
+  selector:
+    matchLabels:
+      app: test-app
+  template:
+    metadata:
+      labels:
+        app: test-app
+    spec:
+      containers:
+        - name: model-container
+          image: model:01
+          ports:
+            - containerPort: 5001
+        - name: preprocess-container
+          image: preprocess:01
+          ports:
+            - containerPort: 5000
