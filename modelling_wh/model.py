@@ -1,4 +1,7 @@
 import os
+import io
+from flask import Flask, request, jsonify
+import requests
 import joblib
 import pandas as pd
 from sklearn.model_selection import train_test_split, GridSearchCV
@@ -9,6 +12,8 @@ from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.metrics import classification_report
+
+app = Flask(__name__)
 
 def split_data(df: pd.DataFrame):
     """Split the dataset into training and testing sets.
@@ -135,11 +140,13 @@ def save_model(model, model_name):
     joblib.dump(model, model_save_path)
     print(f"Model saved to {model_save_path}")
 
-
-if __name__ == '__main__':
-    # Load the processed training dataset
-    train_data_path = 'data/02_processed/train_processed.csv'
-    train_data = pd.read_csv(train_data_path)
+@app.route('/model', methods=['POST'])
+def model_train():
+    # Get files from post request
+    file1 = request.files.get('file1')
+    file2 = request.files.get('file2')
+    train_data = pd.read_csv(io.StringIO(file1.stream.read().decode('utf-8')))
+    predict_data = pd.read_csv(io.StringIO(file2.stream.read().decode('utf-8')))
 
     # Split data into training and testing
     X_train, X_test, y_train, y_test = split_data(train_data)
@@ -155,3 +162,9 @@ if __name__ == '__main__':
 
     # Save the best model
     save_model(best_model_tuned, best_model_name)
+
+    return f"Final Model Metrics: {final_metrics} <br>Best Model: {best_model_name}"
+
+
+if __name__ == '__main__':
+    app.run(port=5001)

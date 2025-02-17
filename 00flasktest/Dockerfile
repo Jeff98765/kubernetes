@@ -8,13 +8,13 @@ ENV PYTHONIOENCODING=UTF-8
 WORKDIR /app
 
 # Copy app code
-COPY app2.py requirements.txt ./
+COPY app.py requirements.txt ./
 
 # Install dependencies
 RUN pip install -r requirements.txt
 
 # Expose Flask port
-EXPOSE 5001
+EXPOSE 5000
 
 # Run the app
-CMD ["python", "app2.py"]
+CMD ["python", "app.py"]
