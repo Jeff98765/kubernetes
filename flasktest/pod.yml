@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: data-pod
+spec:
+  containers:
+    - name: receive-container
+      image: receive:01
+      ports:
+        - containerPort: 5001
+    - name: generate-container
+      image: generate:01
+      ports:
+        - containerPort: 5000
