@@ -1,8 +1,11 @@
+from flask import Flask
 import pandas as pd
 import numpy as np
 import re
+import requests
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
+app = Flask(__name__)
 
 def extract_title(name):
     """Extract title from passenger's name and normalize it."""
@@ -71,7 +74,6 @@ def scale_features(df):
     
     return df
 
-
 def preprocess_data(input_file, output_file):
     """Main function to preprocess data."""
     # Load Titanic dataset
@@ -97,11 +99,27 @@ def preprocess_data(input_file, output_file):
     # Save processed data
     df.to_csv(output_file, index=False)
 
-if __name__ == '__main__':
+@app.route('/preprocess')
+def preprocess_train_test():
     train_dataset_path = 'data/01_raw/train.csv'
-    test_dataset_path = 'data/01_raw/test.csv'
+    predict_dataset_path = 'data/01_raw/predict.csv'
     train_processed_path = 'data/02_processed/train_processed.csv'
-    test_processed_path = 'data/02_processed/test_processed.csv'
+    predict_processed_path = 'data/02_processed/predict_processed.csv'
 
     preprocess_data(train_dataset_path, train_processed_path)
-    preprocess_data(test_dataset_path, test_processed_path)
+    preprocess_data(predict_dataset_path, predict_processed_path)
+
+    # Send files to next container
+    url = "http://localhost:5001/model"
+    with open(train_processed_path, 'rb') as f1, open(predict_processed_path, 'rb') as f2:
+        files = {
+            'file1': (train_processed_path, f1, 'text/csv'),
+            'file2': (predict_processed_path, f2, 'text/csv') 
+        }
+        response = requests.post(url, files=files)
+
+    return f"Preprocessing complete, files sent to model training. \nResponse: {response.text}"
+
+
+if __name__ == '__main__':
+    app.run(port=5000)

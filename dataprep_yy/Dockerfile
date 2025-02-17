@@ -1,15 +1,21 @@
 # Use a lightweight Python base image
-FROM python:3.9-slim
+FROM python:3.9
+
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONIOENCODING=UTF-8
 
 # Set the working directory inside the container
 WORKDIR /app
 
-# Copy and install dependencies first to take advantage of Docker’s caching
-COPY requirements.txt . 
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy app code
+COPY dataprep.py requirements.txt ./
+COPY data/ ./data/
 
-# Copy all project files into the container
-COPY . .
+# Install dependencies
+RUN pip install -r requirements.txt
 
-# Run the dataprep.py script when the container starts
+# Expose Flask port
+EXPOSE 5000
+
+# Run the app
 CMD ["python", "dataprep.py"]
