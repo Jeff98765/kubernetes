@@ -1,6 +1,6 @@
 import os
 import io
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import requests
 import joblib
 import pandas as pd
@@ -163,7 +163,7 @@ def model_train():
     # Save the best model
     save_model(best_model_tuned, best_model_name)
 
-    return f"Final Model Metrics: {final_metrics} \nBest Model: {best_model_name}"
+    return f"Final Model Metrics: {final_metrics} <br>Best Model: {best_model_name}"
 
 
 if __name__ == '__main__':
