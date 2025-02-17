@@ -1,18 +1,19 @@
 import streamlit as st
 import pandas as pd
 import joblib
-import os
 import sys
-import subprocess
-from sklearn.metrics import accuracy_score
+import os
 
-# Ensure Python recognizes the parent directory
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+# Get the absolute path of the current script
+base_path = os.path.dirname(os.path.abspath(__file__))
 
-# Define paths to container scripts
-DATAPREP_SCRIPT = "../dataprep/dataprep_c1.py"
-MODEL_SCRIPT = "../model/model_c2.py"
-PREDICTION_SCRIPT = "../prediction/prediction_c3.py"
+# Ensure Python can find the 'containers' directory
+sys.path.append(os.path.abspath(os.path.join(base_path, "..")))
+
+# Import necessary functions
+from dataprep.dataprep_c1 import preprocess_dataset
+from model.model_c2 import split_data, train_and_evaluate_models, save_model
+from prediction.prediction_c3 import make_predictions
 
 # Initialize session state variables if not already set
 if "train_data" not in st.session_state:
@@ -25,43 +26,76 @@ if "processed_test_data" not in st.session_state:
     st.session_state.processed_test_data = None
 if "model" not in st.session_state:
     st.session_state.model = None
+if "best_model_name" not in st.session_state:
+    st.session_state.best_model_name = None
 
 st.title("AI Model Dashboard")
 
 st.sidebar.header("Navigation")
-page = st.sidebar.radio("Go to", ["Data Preprocessing", "Model Training", "Model Evaluation"])
+page = st.sidebar.radio("Go to", ["Data Preprocessing", "Modeling", "Prediction"])
 
+# ------------------ DATA PREPROCESSING ------------------
 if page == "Data Preprocessing":
-    st.header("Upload Train Data for Preprocessing")
+    st.header("Upload Train and Test Data for Preprocessing")
+    
     uploaded_train = st.file_uploader("Upload Training CSV", type=["csv"], key="train")
-    if uploaded_train is not None:
-        train_path = "train_data.csv"
-        with open(train_path, "wb") as f:
-            f.write(uploaded_train.getbuffer())
-        
-        # Run the data preprocessing container
-        subprocess.run(["python", DATAPREP_SCRIPT, train_path], check=True)
-        st.success("Data preprocessing complete!")
+    uploaded_test = st.file_uploader("Upload Test CSV", type=["csv"], key="test")
 
-elif page == "Model Training":
-    st.header("Train Model")
-    if st.session_state.processed_train_data is not None:
-        st.write("Training model...")
-        subprocess.run(["python", MODEL_SCRIPT, "processed_train_data.csv"], check=True)
-        st.success("Model trained successfully!")
-    else:
-        st.warning("Please preprocess data first in the Data Preprocessing section.")
-    
-elif page == "Model Evaluation":
-    st.header("Evaluate Model Accuracy")
-    uploaded_test = st.file_uploader("Upload Test Data", type=["csv"], key="test")
-    model_path = "../model/trained_model.pkl"
-    
+    if uploaded_train is not None:
+        st.session_state.train_data = pd.read_csv(uploaded_train)
+        st.session_state.processed_train_data = preprocess_dataset(st.session_state.train_data)
+        st.success("Training data preprocessed successfully!")
+        st.write(st.session_state.processed_train_data)
+
     if uploaded_test is not None:
-        test_path = "test_data.csv"
-        with open(test_path, "wb") as f:
-            f.write(uploaded_test.getbuffer())
+        st.session_state.test_data = pd.read_csv(uploaded_test)
+        st.session_state.processed_test_data = preprocess_dataset(st.session_state.test_data)
+        st.success("Test data preprocessed successfully!")
+        st.write(st.session_state.processed_test_data)
+
+# ------------------ MODELING (TRAINING & EVALUATION) ------------------
+elif page == "Modeling":
+    st.header("Train & Evaluate Model")
+
+    if st.session_state.processed_train_data is not None:
+        st.write("Splitting data, training, and evaluating the model...")
+
+        # Split training data into train-test
+        X_train, X_test, y_train, y_test = split_data(st.session_state.processed_train_data)
+
+        # Train and evaluate the model
+        best_model_name, best_model, results = train_and_evaluate_models(X_train, y_train, X_test, y_test)
         
-        # Run the prediction container
-        subprocess.run(["python", PREDICTION_SCRIPT, test_path, model_path], check=True)
-        st.success("Model evaluation complete!")
+        # Save the model
+        save_model(best_model, best_model_name)
+
+        # Store in session state
+        st.session_state.model = best_model
+        st.session_state.best_model_name = best_model_name
+
+        st.success(f"Model trained successfully: {best_model_name}")
+        st.write("Model Evaluation Metrics:", results)
+    else:
+        st.warning("Please preprocess the train data first in the Data Preprocessing section.")
+
+# ------------------ PREDICTION ON TEST DATA ------------------
+elif page == "Prediction":
+    st.header("Generate Predictions on Test Dataset")
+
+    if st.session_state.model is None:
+        st.warning("No trained model found. Train the model first.")
+    elif st.session_state.processed_test_data is not None:
+        st.write("Running model on actual test dataset...")
+
+        X_test = st.session_state.processed_test_data.drop(columns=["Survived"], errors='ignore')
+        
+        # Use the stored model name to locate the saved model
+        model_path = f"saved_model/{st.session_state.best_model_name.lower().replace(' ', '_')}_model.pkl"
+        output_filename = "final_predictions.csv"
+
+        make_predictions(X_test, model_path, output_filename)
+
+        st.success("Predictions saved successfully!")
+        st.write(f"Predictions saved to: {output_filename}")
+    else:
+        st.warning("Please preprocess the test data first in the Data Preprocessing section.")

@@ -2,7 +2,7 @@ import os
 import joblib
 import pandas as pd
 
-def make_predictions_and_save_to_csv(test_data: pd.DataFrame, model_path: str, output_filename: str):
+def make_predictions(test_data: pd.DataFrame, model_path: str, output_filename: str):
     """
     Loads a saved model, makes predictions on the test data, and saves the results to a CSV file.
 
@@ -40,4 +40,4 @@ if __name__ == '__main__':
     model_path = 'saved_model/random_forest_model.pkl'
     output_filename = 'predictions.csv'
 
-    make_predictions_and_save_to_csv(test_data, model_path, output_filename)    
+    make_predictions(test_data, model_path, output_filename)    
