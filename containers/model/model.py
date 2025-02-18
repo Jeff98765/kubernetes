@@ -1,8 +1,7 @@
 import os
 import io
 import logging
-import jsonify
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import requests
 import joblib
 import pandas as pd
@@ -204,44 +203,47 @@ def model_train():
         try:
             save_model(best_model_tuned, best_model_name)
             logging.info(f"Best model saved successfully.")
+            return jsonify({
+                            "Final Model Metrics": final_metrics,
+                            "Best Model": best_model_name})
         except Exception as e:
             logging.error(f"Error saving the best model: {str(e)}")
             return jsonify({"error": f"Error saving the best model: {str(e)}"}), 500
 
-        # Automatically trigger the prediction Flask app
-        try:
-            # Define the URL for the prediction Flask app
-            prediction_url = "http://prediction-service:80/predict"
-            logging.info(f"Attempting to send processed predict data to {prediction_url}")
+        # # Automatically trigger the prediction Flask app
+        # try:
+        #     # Define the URL for the prediction Flask app
+        #     prediction_url = "http://prediction-service:80/predict"
+        #     logging.info(f"Attempting to send processed predict data to {prediction_url}")
 
-            # Save the processed predict data to a file
-            predict_processed_path = 'data/02_processed/test_processed.csv'
-            os.makedirs(os.path.dirname(predict_processed_path), exist_ok=True)
-            predict_data.to_csv(predict_processed_path, index=False)
+        #     # Save the processed predict data to a file
+        #     predict_processed_path = 'data/02_processed/test_processed.csv'
+        #     os.makedirs(os.path.dirname(predict_processed_path), exist_ok=True)
+        #     predict_data.to_csv(predict_processed_path, index=False)
 
-            # Send the processed predict data to the prediction Flask app
-            with open(predict_processed_path, 'rb') as f:
-                files = {
-                    'file': (predict_processed_path, f, 'text/csv')
-                }
-                response = requests.post(prediction_url, files=files)
-                response.raise_for_status()  # Raise an error for bad status codes
-                logging.info(f"Prediction triggered successfully. Response: {response.text}")
-                return jsonify({
-                                "Final Model Metrics": final_metrics,
-                                "Best Model": best_model_name,
-                                "Prediction Triggered": response.text
-                                })
-        except requests.exceptions.ConnectionError as e:
-            logging.error(f"Failed to connect to the prediction service at {prediction_url}. Ensure the service is running. Error: {str(e)}")
-            return jsonify({
-                            "error": f"Failed to connect to the prediction service at {prediction_url}. Ensure the service is running. Error: {str(e)}"
-                            }), 500
-        except requests.exceptions.RequestException as e:
-            logging.error(f"Error sending files to prediction service. Error: {str(e)}")
-            return jsonify({
-                            "error": f"Error sending files to prediction service. Error: {str(e)}"
-                            }), 500
+        #     # Send the processed predict data to the prediction Flask app
+        #     with open(predict_processed_path, 'rb') as f:
+        #         files = {
+        #             'file': (predict_processed_path, f, 'text/csv')
+        #         }
+        #         response = requests.post(prediction_url, files=files)
+        #         response.raise_for_status()  # Raise an error for bad status codes
+        #         logging.info(f"Prediction triggered successfully. Response: {response.text}")
+        #         return jsonify({
+        #                         "Final Model Metrics": final_metrics,
+        #                         "Best Model": best_model_name,
+        #                         "Prediction Triggered": response.text
+        #                         })
+        # except requests.exceptions.ConnectionError as e:
+        #     logging.error(f"Failed to connect to the prediction service at {prediction_url}. Ensure the service is running. Error: {str(e)}")
+        #     return jsonify({
+        #                     "error": f"Failed to connect to the prediction service at {prediction_url}. Ensure the service is running. Error: {str(e)}"
+        #                     }), 500
+        # except requests.exceptions.RequestException as e:
+        #     logging.error(f"Error sending files to prediction service. Error: {str(e)}")
+        #     return jsonify({
+        #                     "error": f"Error sending files to prediction service. Error: {str(e)}"
+        #                     }), 500
 
     except Exception as e:
         logging.error(f"Unexpected error in /model endpoint: {str(e)}")
