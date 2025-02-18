@@ -1,5 +1,5 @@
 import io
-from flask import Flask, request, jsonify
+from flask import Flask, request
 import requests
 import pickle
 import pandas as pd
@@ -118,13 +118,7 @@ def train_and_evaluate_model(model, X_train, y_train, X_test, y_test):
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
 
-    metrics = {
-        'Accuracy': accuracy_score(y_test, y_pred),
-        'Precision': precision_score(y_test, y_pred),
-        'Recall': recall_score(y_test, y_pred),
-        'F1 Score': f1_score(y_test, y_pred),
-        'Classification Report': classification_report(y_test, y_pred)
-    }
+    metrics = classification_report(y_test, y_pred)
 
     print(f"\nFinal Model: {model.__class__.__name__}")
     print(classification_report(y_test, y_pred))
@@ -174,7 +168,9 @@ def model_train():
         }
         response = requests.post(url, files=files)
 
-    return f"Final Model Metrics: {final_metrics} <br>Best Model: {best_model_name} <br><br>Response from prediction: {response.text}"
+    return_text = f"Best Model: \n{best_model_name} \nFinal Model Metrics: \n{final_metrics} \n\nResponse from prediction: \n{response.text}"
+
+    return return_text, 200, {'Content-Type': 'text/plain'}
 
 
 if __name__ == '__main__':

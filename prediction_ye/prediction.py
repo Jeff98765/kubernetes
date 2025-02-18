@@ -22,7 +22,9 @@ def predict_on_data():
     predicted_data_path = 'predictions/predicted_data.csv'
     predict_data.to_csv(predicted_data_path, index=False)
     
-    return f"Prediction complete, file saved at {predicted_data_path}"
+    return_text = f"Prediction complete, file saved at {predicted_data_path}"
+
+    return return_text, 200, {'Content-Type': 'text/plain'}
 
 if __name__ == '__main__':
     app.run(port=5002) 
