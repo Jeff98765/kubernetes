@@ -227,13 +227,21 @@ def model_train():
                 response = requests.post(prediction_url, files=files)
                 response.raise_for_status()  # Raise an error for bad status codes
                 logging.info(f"Prediction triggered successfully. Response: {response.text}")
-                return f"Final Model Metrics: {final_metrics} \nBest Model: {best_model_name} \nPrediction Triggered: {response.text}"
+                return jsonify({
+                                "Final Model Metrics": final_metrics,
+                                "Best Model": best_model_name,
+                                "Prediction Triggered": response.text
+                                })
         except requests.exceptions.ConnectionError as e:
             logging.error(f"Failed to connect to the prediction service at {prediction_url}. Ensure the service is running. Error: {str(e)}")
-            return f"Failed to connect to the prediction service at {prediction_url}. Ensure the service is running. Error: {str(e)}"
+            return jsonify({
+                            "error": f"Failed to connect to the prediction service at {prediction_url}. Ensure the service is running. Error: {str(e)}"
+                            }), 500
         except requests.exceptions.RequestException as e:
             logging.error(f"Error sending files to prediction service. Error: {str(e)}")
-            return f"Error sending files to prediction service. Error: {str(e)}"
+            return jsonify({
+                            "error": f"Error sending files to prediction service. Error: {str(e)}"
+                            }), 500
 
     except Exception as e:
         logging.error(f"Unexpected error in /model endpoint: {str(e)}")
