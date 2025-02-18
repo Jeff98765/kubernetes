@@ -6,6 +6,7 @@ import os
 
 # Get the absolute path of the current script
 base_path = os.path.dirname(os.path.abspath(__file__))
+data_path = os.path.abspath(os.path.join(base_path, "..", "data", "03_predicted"))
 
 # Ensure Python can find the 'containers' directory
 sys.path.append(os.path.abspath(os.path.join(base_path, "..")))
@@ -20,10 +21,58 @@ for var in ["train_data", "processed_train_data", "test_data", "processed_test_d
     if var not in st.session_state:
         st.session_state[var] = None
 
+# Ensure prediction directory exists
+os.makedirs(data_path, exist_ok=True)
+
+# ------------------ 🎨 Custom Styles ------------------
+st.markdown(
+    """
+    <style>
+        /* General Background */
+        .stApp {
+            background-color: #E6E6FA !important;  /* Soft Lavender */
+        }
+
+        /* Sidebar Styling */
+        section[data-testid="stSidebar"] {
+            background-color: #D8BFD8 !important;  /* Light Mauve */
+        }
+
+        /* Headers */
+        h1, h2, h3, h4 {
+            color: #4B0082 !important;  /* Deep Plum */
+        }
+
+        /* Buttons */
+        .stButton>button {
+            background-color: #BA55D3 !important; /* Dusty Purple */
+            color: white !important;
+            border-radius: 10px;
+        }
+
+        /* File Upload Background */
+        div[data-testid="stFileUploader"] {
+            background-color: #D8BFD8 !important;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        /* Download Button */
+        .stDownloadButton>button {
+            background-color: #BA55D3 !important; /* Orchid */
+            color: white !important;
+            border-radius: 8px;
+        }
+
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # ------------------ 🏠 Sidebar Navigation ------------------
 st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Tensorflow_logo.svg/1200px-Tensorflow_logo.svg.png", width=150)
 st.sidebar.title("🔍 AI Pipeline Navigation")
-st.sidebar.markdown("<h3 style='color: #FFB6C1;'>Automated Machine Learning Workflow</h3>", unsafe_allow_html=True)
+st.sidebar.markdown("<h3 style='color: #4B0082;'>Automated Machine Learning Workflow</h3>", unsafe_allow_html=True)
 st.sidebar.divider()
 
 st.sidebar.info(
@@ -39,13 +88,13 @@ st.sidebar.info(
 # ------------------ 🔥 Main Web App ------------------
 st.markdown(
     """
-    <h1 style='text-align: center; color: #FFB6C1;'>🧠 AI Pipeline Dashboard</h1>
+    <h1 style='text-align: center; color: #4B0082;'>💜 AI Pipeline Dashboard</h1>
     <h4 style='text-align: center; color: gray;'>An Automated End-to-End Machine Learning Pipeline</h4>
     """, unsafe_allow_html=True
 )
 
 # ------------------ 📂 File Uploads ------------------
-st.markdown("<h2 style='color: #FF69B4;'>📤 Upload Train & Test Data to Start Pipeline</h2>", unsafe_allow_html=True)
+st.markdown("<h2 style='color: #BA55D3;'>📤 Upload Train & Test Data to Start Pipeline</h2>", unsafe_allow_html=True)
 
 uploaded_train = st.file_uploader("📂 Upload Training CSV", type=["csv"], key="train")
 uploaded_test = st.file_uploader("📂 Upload Test CSV", type=["csv"], key="test")
@@ -53,8 +102,8 @@ uploaded_test = st.file_uploader("📂 Upload Test CSV", type=["csv"], key="test
 if uploaded_train and uploaded_test:
     st.subheader("🚀 **Starting Automated Pipeline...**")
     
-    # 1️⃣ **Preprocessing**
-    st.write("<h4 style='color: #DB7093;'>🔄 Preprocessing Data...</h4>", unsafe_allow_html=True)
+    # 1️. **Preprocessing**
+    st.write("<h4 style='color: #8A2BE2;'>🔄 Preprocessing Data...</h4>", unsafe_allow_html=True)
     progress_bar = st.progress(0)
 
     st.session_state.train_data = pd.read_csv(uploaded_train)
@@ -68,8 +117,8 @@ if uploaded_train and uploaded_test:
 
     progress_bar.progress(30)
 
-    # 2️⃣ **Model Training & Evaluation**
-    st.write("<h4 style='color: #C71585;'>🔄 Training and Evaluating Model...</h4>", unsafe_allow_html=True)
+    # 2️. **Model Training & Evaluation**
+    st.write("<h4 style='color: #4B0082;'>🔄 Training and Evaluating Model...</h4>", unsafe_allow_html=True)
     
     X_train, X_test, y_train, y_test = split_data(st.session_state.processed_train_data)
     
@@ -85,22 +134,22 @@ if uploaded_train and uploaded_test:
 
     progress_bar.progress(70)
 
-    # 3️⃣ **Run Predictions on Test Data**
-    st.write("<h4 style='color: #FF1493;'>🔄 Running Model on Test Dataset...</h4>", unsafe_allow_html=True)
+    # 3️. **Run Predictions on Test Data**
+    st.write("<h4 style='color: #6A0DAD;'>🔄 Running Model on Test Dataset...</h4>", unsafe_allow_html=True)
 
     X_test_final = st.session_state.processed_test_data.drop(columns=["Survived"], errors='ignore')
 
     model_path = f"saved_model/{st.session_state.best_model_name.lower().replace(' ', '_')}_model.pkl"
-    predictions_file = "AA/final_predictions.csv"
+    predictions_file = os.path.join(data_path, "final_predictions.csv")
 
     make_predictions(X_test_final, model_path, predictions_file)
 
     st.session_state.predictions_file = predictions_file
-    st.success("✅ **Predictions Generated & Saved!**")
+    st.success(f"✅ **Predictions Generated & Saved in `{predictions_file}`!**")
 
     progress_bar.progress(100)
 
-    # 4️⃣ **Display Predictions & Download Option**
+    # 4️. **Display Predictions & Download Option**
     st.header("📌 Final Predictions")
 
     if os.path.exists(predictions_file):
