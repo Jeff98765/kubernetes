@@ -1,43 +1,28 @@
-import os
-import joblib
+from flask import Flask, request
+import pickle
 import pandas as pd
+import io
+from sklearn.base import BaseEstimator
 
-def make_predictions_and_save_to_csv(test_data: pd.DataFrame, model_path: str, output_filename: str):
-    """
-    Loads a saved model, makes predictions on the test data, and saves the results to a CSV file.
+app = Flask(__name__)
 
-    Args:
-        test_data (pd.DataFrame): The feature data for testing the model.
-        model_path (str): Path to the saved model file.
-        output_filename (str): Name of the output CSV file to save predictions.
+@app.route('/predict', methods=['POST'])
+def predict_on_data():
+    # Get files from post request
+    file1 = request.files.get('file1')
+    file2 = request.files.get('file2')
+    model = pickle.load(file1.stream)
+    predict_data = pd.read_csv(io.StringIO(file2.stream.read().decode('utf-8')))
 
-    Returns:
-        None
-    """
-    # Load the saved model
-    model = joblib.load(model_path)
+    # Predict on prediction dataset
+    predictions = model.predict(predict_data)
+    predict_data['Predicted_Survived'] = predictions
 
-    # Make predictions on the test data
-    predictions = model.predict(test_data)
-
-    # Add the predictions to the test data (you can use index or passenger_id if needed)
-    test_data['Predicted_Survived'] = predictions
-
-    # Define the path to save the output CSV file
-    output_path = os.path.join('data', '03_predicted', output_filename)
-
-    # Ensure the directory exists
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-    # Save the test data with predictions to the CSV file
-    test_data.to_csv(output_path, index=False)
-    print(f"\nPredictions saved to {output_path}")
+    # Save predictions
+    predicted_data_path = 'predictions/predicted_data.csv'
+    predict_data.to_csv(predicted_data_path, index=False)
+    
+    return f"Prediction complete, file saved at {predicted_data_path}"
 
 if __name__ == '__main__':
-    test_data_path = 'data/02_processed/test_processed.csv'
-    test_data = pd.read_csv(test_data_path)
-
-    model_path = 'saved_model/random_forest_model.pkl'
-    output_filename = 'predictions.csv'
-
-    make_predictions_and_save_to_csv(test_data, model_path, output_filename)    
+    app.run(port=5002) 

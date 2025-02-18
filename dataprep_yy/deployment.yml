@@ -13,6 +13,10 @@ spec:
         app: test-app
     spec:
       containers:
+        - name: predict-container
+          image: predict:01
+          ports:
+            - containerPort: 5002
         - name: model-container
           image: model:01
           ports:

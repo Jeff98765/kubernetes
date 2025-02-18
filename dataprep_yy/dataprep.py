@@ -118,7 +118,7 @@ def preprocess_train_test():
         }
         response = requests.post(url, files=files)
 
-    return f"Preprocessing complete, files sent to model training. <br>Response: {response.text}"
+    return f"Preprocessing complete, files sent to model training. <br><br>Response from modelling: {response.text}"
 
 
 if __name__ == '__main__':

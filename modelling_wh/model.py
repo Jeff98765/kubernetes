@@ -1,8 +1,7 @@
-import os
 import io
 from flask import Flask, request, jsonify
 import requests
-import joblib
+import pickle
 import pandas as pd
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
@@ -134,11 +133,15 @@ def train_and_evaluate_model(model, X_train, y_train, X_test, y_test):
 def save_model(model, model_name):
     """Saves the trained model using joblib with its name."""
     model_filename = f"{model_name.lower().replace(' ', '_')}_model.pkl"
-    model_save_path = os.path.join('saved_model', model_filename)
+    model_save_path = "saved_model/" + model_filename
 
-    os.makedirs(os.path.dirname(model_save_path), exist_ok=True)
-    joblib.dump(model, model_save_path)
+    # Save model
+    with open(model_save_path, 'wb') as model_file:
+        pickle.dump(model, model_file)
+
     print(f"Model saved to {model_save_path}")
+    return model_save_path
+
 
 @app.route('/model', methods=['POST'])
 def model_train():
@@ -146,7 +149,6 @@ def model_train():
     file1 = request.files.get('file1')
     file2 = request.files.get('file2')
     train_data = pd.read_csv(io.StringIO(file1.stream.read().decode('utf-8')))
-    predict_data = pd.read_csv(io.StringIO(file2.stream.read().decode('utf-8')))
 
     # Split data into training and testing
     X_train, X_test, y_train, y_test = split_data(train_data)
@@ -161,9 +163,18 @@ def model_train():
     final_metrics = train_and_evaluate_model(best_model_tuned, X_train, y_train, X_test, y_test)
 
     # Save the best model
-    save_model(best_model_tuned, best_model_name)
+    model_path = save_model(best_model_tuned, best_model_name)
 
-    return f"Final Model Metrics: {final_metrics} <br>Best Model: {best_model_name}"
+    # Send files to next container
+    url = "http://localhost:5002/predict"
+    with open(model_path, 'rb') as f1:
+        files = {
+            'file1': (model_path, f1, 'application/octet-stream'),
+            'file2': (file2.filename, file2.stream, 'text/csv') 
+        }
+        response = requests.post(url, files=files)
+
+    return f"Final Model Metrics: {final_metrics} <br>Best Model: {best_model_name} <br><br>Response from prediction: {response.text}"
 
 
 if __name__ == '__main__':
