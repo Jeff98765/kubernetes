@@ -1,47 +1,47 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: data-pv
+  name: raw-data-pv
 spec:
   capacity:
     storage: 1Gi
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: /mnt/data
+    path: /mnt/raw-data
 ---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: output-pv
+  name: processed-data-pv
 spec:
   capacity:
     storage: 1Gi
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: /mnt/output
+    path: /mnt/processed-data
 ---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: model-pv
+  name: saved-model-pv
 spec:
   capacity:
     storage: 1Gi
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: /mnt/models
+    path: /mnt/saved-model
 ---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: predictions-pv
+  name: prediction-results-pv
 spec:
   capacity:
     storage: 1Gi
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: /mnt/predictions
+    path: /mnt/prediction-results

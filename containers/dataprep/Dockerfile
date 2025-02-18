@@ -1,15 +1,23 @@
-# Use a lightweight Python base image
+# Use an official Python runtime as the base image
 FROM python:3.9-slim
+
+# Install curl
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory inside the container
 WORKDIR /app
 
-# Copy and install dependencies first to take advantage of Docker’s caching
-COPY requirements.txt . 
+# Copy the requirements file into the container
+COPY requirements.txt .
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy all project files into the container
+# Copy the rest of the application code into the container
 COPY . .
 
-# Run the dataprep_c1.py script when the container starts
-CMD ["python", "dataprep_c1.py"]
+# Expose the port that Flask will run on
+EXPOSE 5000
+
+# Define the command to run the Flask app
+CMD ["python", "dataprep.py"]

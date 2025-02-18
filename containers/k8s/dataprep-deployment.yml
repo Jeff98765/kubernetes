@@ -14,7 +14,16 @@ spec:
     spec:
       containers:
       - name: dataprep-container
-        image: kubelete/dataprep_image:v1
+        image: kubelete/dataprep-flask:v3
+        ports:
+        - containerPort: 5000
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1"
         volumeMounts:
         - name: raw-data-volume
           mountPath: /app/data/01_raw
@@ -26,7 +35,7 @@ spec:
           name: raw-dataset-config
       - name: processed-data-volume
         persistentVolumeClaim:
-          claimName: output-pvc
+          claimName: processed-data-pvc
 ---
 apiVersion: v1
 kind: Service
