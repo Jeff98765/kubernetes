@@ -14,7 +14,16 @@ spec:
     spec:
       containers:
       - name: prediction-container
-        image: kubelete/prediction_image:v1
+        image: kubelete/prediction-flask:v3
+        ports:
+        - containerPort: 5002
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1"
         volumeMounts:
         - name: processed-data-volume
           mountPath: /app/data/02_processed
@@ -25,13 +34,13 @@ spec:
       volumes:
       - name: processed-data-volume
         persistentVolumeClaim:
-          claimName: output-pvc
+          claimName: processed-data-pvc
       - name: saved-model-volume
         persistentVolumeClaim:
-          claimName: model-pvc
+          claimName: saved-model-pvc
       - name: predicted-data-volume
         persistentVolumeClaim:
-          claimName: predictions-pvc
+          claimName: predicted-data-pvc
 ---
 apiVersion: v1
 kind: Service
@@ -43,4 +52,4 @@ spec:
   ports:
   - protocol: TCP
     port: 80
-    targetPort: 5000
+    targetPort: 5002

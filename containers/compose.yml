@@ -1,59 +1,56 @@
-version: '3'
+version: '3.8'
+
 services:
   dataprep:
-    build: ./dataprep
-    image: dataprep_image
-    volumes:
-      - ./data/01_raw:/app/data/01_raw
-      - ./data/02_processed:/app/data/02_processed
-    command: >
-      sh -c "python dataprep_c1.py
-      --input1 /app/data/01_raw/train.csv
-      --input2 /app/data/01_raw/test.csv
-      --output1 /app/data/02_processed/train_processed.csv
-      --output2 /app/data/02_processed/test_processed.csv && sleep 3600"
-    healthcheck:
-      test: ["CMD", "test", "-f", "/app/data/02_processed/train_processed.csv"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+    image: kubelete/dataprep-flask:v3
+    container_name: dataprep
+    ports:
+      - "5000:5000"
+    networks:
+      - app-network
+    restart: always
 
   model:
-    build: ./model
-    image: model_image
-    volumes:
-      - ./data/02_processed:/app/data/02_processed
-      - ./saved_model:/app/saved_model
+    image: kubelete/model-flask:v3
+    container_name: model
+    ports:
+      - "5001:5001"
+    networks:
+      - app-network
     depends_on:
-      dataprep:
-        condition: service_healthy
-    command: >
-      sh -c "python model_c2.py
-      --input /app/data/02_processed/train_processed.csv
-      --output /app/saved_model/random_forest_model.pkl && sleep 3600"
-    healthcheck:
-      test: ["CMD", "test", "-f", "/app/saved_model/random_forest_model.pkl"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - dataprep
+    restart: always
 
   prediction:
-    build: ./prediction
-    image: prediction_image
-    volumes:
-      - ./data/02_processed:/app/data/02_processed
-      - ./saved_model:/app/saved_model
-      - ./data/03_predicted:/app/data/03_predicted
+    image: kubelete/prediction-flask:v3
+    container_name: prediction
+    ports:
+      - "5002:5002"
+    networks:
+      - app-network
     depends_on:
-      model:
-        condition: service_healthy
+      - model
+    restart: always
+
+  tester:
+    image: curlimages/curl:latest
+    container_name: tester
+    networks:
+      - app-network
+    depends_on:
+      - prediction
+    entrypoint: ["/bin/sh", "-c"]
     command: >
-      sh -c "python prediction_c3.py
-      --input1 /app/data/02_processed/test_processed.csv
-      --input2 /app/saved_model/random_forest_model.pkl
-      --output /app/data/03_predicted/predictions.csv && sleep 3600"
-    healthcheck:
-      test: ["CMD", "test", "-f", "/app/data/03_predicted/predictions.csv"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      "
+      echo 'Testing dataprep...';
+      curl -f http://dataprep:5000/preprocess || exit 1;
+      echo 'Testing model...';
+      curl -f http://model:5001/model || exit 1;
+      echo 'Testing prediction...';
+      curl -f http://prediction:5002/predict || exit 1;
+      echo 'All tests passed!';
+      "
+
+networks:
+  app-network:
+    driver: bridge

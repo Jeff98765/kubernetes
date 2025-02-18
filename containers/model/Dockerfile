@@ -1,15 +1,15 @@
-# Use a lightweight Python base image
 FROM python:3.9-slim
+    
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
-# Set the working directory inside the container
 WORKDIR /app
 
-# Copy and install dependencies first to take advantage of Docker’s caching
-COPY requirements.txt . 
+COPY requirements.txt .
+
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy all project files into the container
 COPY . .
 
-# Run the dataprep_c1.py script when the container starts
-CMD ["python", "model_c2.py"]
+EXPOSE 5001
+
+CMD ["python", "model.py"]
