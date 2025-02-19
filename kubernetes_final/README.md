@@ -95,11 +95,6 @@ To run this project, the following tools are required:
 
 ## 5. Usage Instructions
 
-### Test Dataprep Flask Pipeline:
-```sh
-kubectl exec <pod-name> -- curl http://dataprep-service:80/preprocess
-```
-
 ### Test Streamlit UI:
 ```sh
 minikube service streamlit-service --url
