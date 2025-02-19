@@ -167,6 +167,5 @@ GitHub is used to track code commits. Access the [project repository](https://gi
 ## 9. Additional Features
 - Added progress bar in the UI to track progress
 - Added a display in the UI to show predictions
-- Implemented automated testing scripts for CI/CD
 
 
