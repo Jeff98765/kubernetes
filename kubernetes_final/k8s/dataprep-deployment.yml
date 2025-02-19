@@ -37,8 +37,8 @@ spec:
           mountPath: /app/data/02_processed
       volumes:
       - name: raw-data-volume
-        configMap:
-          name: raw-dataset-config
+        persistentVolumeClaim:
+          claimName: raw-data-pvc
       - name: processed-data-volume
         persistentVolumeClaim:
           claimName: processed-data-pvc
