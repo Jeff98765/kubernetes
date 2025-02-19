@@ -23,16 +23,14 @@ This project demonstrates the deployment of an end-to-end AI solution in Kuberne
 The solution is fully containerized, scalable, and supports self-healing, rollouts, and rollbacks.
 
 ## 2. System Architecture
-The system architecture follows this modular flow:
-```
-Raw Data → [Dataprep] → Preprocessed Data → [Model] → Trained Model → [Prediction] → Predictions → [UI]
-```
+The system architecture is described in this section.
+
 **Container Connections**
 Each container interacts with Kubernetes resources (PVs, PVCs, and Services) to ensure modularity and data persistence. Below are the connections for each container, including the service ports and how they are exposed:
 
 - **Dataprep Container**
   - **PV/PVC**: 
-    - Reads raw data from a ConfigMap named `raw-dataset-config`.
+    - Reads raw data from `raw-data-pvc`.
     - Writes preprocessed data to `processed-data-pvc`.
   - **Service**: Exposed via `dataprep-service`.
     - **Internal Port**: 5000 (container listens on this port).
