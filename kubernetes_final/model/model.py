@@ -1,5 +1,4 @@
 import os
-import logging
 from flask import Flask, request, jsonify
 import joblib
 import pandas as pd
@@ -148,68 +147,48 @@ def model_train():
         file2 = request.files.get('file2')
 
         if not file1 or not file2:
-            logging.error("No files provided in the request.")
             return jsonify({"error": "No files provided"}), 400
 
-        logging.info("Loading processed datasets from uploaded files...")
         try:
             train_data = pd.read_csv(file1)
             predict_data = pd.read_csv(file2)
-            logging.info("Datasets loaded successfully.")
         except Exception as e:
-            logging.error(f"Error loading datasets: {str(e)}")
             return jsonify({"error": f"Error loading datasets: {str(e)}"}), 400
 
         # Split data into training and testing
-        logging.info("Splitting data into training and testing sets...")
         try:
             X_train, X_test, y_train, y_test = split_data(train_data)
-            logging.info("Data split completed successfully.")
         except Exception as e:
-            logging.error(f"Error splitting data: {str(e)}")
             return jsonify({"error": f"Error splitting data: {str(e)}"}), 500
 
         # Train and evaluate models
-        logging.info("Training and evaluating models...")
         try:
             best_model_name, best_model, results = train_and_evaluate_models(X_train, y_train, X_test, y_test)
-            logging.info(f"Best model based on F1 Score: {best_model_name}")
         except Exception as e:
-            logging.error(f"Error during model training and evaluation: {str(e)}")
             return jsonify({"error": f"Error during model training and evaluation: {str(e)}"}), 500
 
         # Tune best model
-        logging.info(f"Tuning best model: {best_model_name}...")
         try:
             best_model_tuned = tune_best_model(best_model_name, best_model, X_train, y_train)
-            logging.info(f"Best model tuned successfully.")
         except Exception as e:
-            logging.error(f"Error tuning best model: {str(e)}")
             return jsonify({"error": f"Error tuning best model: {str(e)}"}), 500
 
         # Final evaluation with tuned model
-        logging.info("Performing final evaluation with the tuned model...")
         try:
             final_metrics = train_and_evaluate_model(best_model_tuned, X_train, y_train, X_test, y_test)
-            logging.info(f"Final model metrics: {final_metrics}")
         except Exception as e:
-            logging.error(f"Error during final model evaluation: {str(e)}")
             return jsonify({"error": f"Error during final model evaluation: {str(e)}"}), 500
 
         # Save the best model
-        logging.info("Saving the best model...")
         try:
             save_model(best_model_tuned, best_model_name)
-            logging.info(f"Best model saved successfully.")
             return jsonify({
                             "Final Model Metrics": final_metrics,
                             "Best Model": best_model_name})
         except Exception as e:
-            logging.error(f"Error saving the best model: {str(e)}")
             return jsonify({"error": f"Error saving the best model: {str(e)}"}), 500
 
     except Exception as e:
-        logging.error(f"Unexpected error in /model endpoint: {str(e)}")
         return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
 
 if __name__ == '__main__':
