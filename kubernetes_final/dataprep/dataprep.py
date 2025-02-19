@@ -2,7 +2,6 @@ from flask import Flask
 import pandas as pd
 import numpy as np
 import re
-
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 app = Flask(__name__)

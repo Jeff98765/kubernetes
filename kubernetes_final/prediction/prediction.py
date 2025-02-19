@@ -39,7 +39,8 @@ def predict():
         return jsonify({
             "message": "Predictions made successfully",
             "output_file": output_path
-        }), 200
+            }), 200
+    
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
