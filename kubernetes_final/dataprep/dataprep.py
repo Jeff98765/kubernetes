@@ -2,7 +2,7 @@ from flask import Flask
 import pandas as pd
 import numpy as np
 import re
-import requests
+
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 app = Flask(__name__)
@@ -113,28 +113,6 @@ def preprocess_train_test():
         preprocess_data(predict_dataset_path, predict_processed_path)
     except Exception as e:
         return f"Error during data preprocessing: {str(e)}"
-
-    # Define the URL for the next service
-    url = "http://model-service:80/model"
-
-    # Send files to the next container
-    try:
-        print(f"Attempting to send files to {url}")
-        print(f"Train processed file: {train_processed_path}")
-        print(f"Predict processed file: {predict_processed_path}")
-
-        with open(train_processed_path, 'rb') as f1, open(predict_processed_path, 'rb') as f2:
-            files = {
-                'file1': (train_processed_path, f1, 'text/csv'),
-                'file2': (predict_processed_path, f2, 'text/csv')
-            }
-            response = requests.post(url, files=files)
-            response.raise_for_status()  # Raise an error for bad status codes
-            return f"Preprocessing complete, files sent to model training. \nResponse: {response.text}"
-    except requests.exceptions.ConnectionError as e:
-        return f"Failed to connect to the model training service at {url}. Ensure the service is running. Error: {str(e)}"
-    except requests.exceptions.RequestException as e:
-        return f"Error sending files to model training service. Error: {str(e)}"
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
